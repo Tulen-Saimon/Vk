@@ -1,0 +1,71 @@
+import vk
+import requests
+import json
+import time
+import logging
+
+
+logging.basicConfig(format = u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s', level = logging.DEBUG, filename = u'Byvshaya.log')
+print ("Введите id пользователя")
+user_id = input()
+#27304052
+print("Количество постов")
+count = input()
+url = 'https://api.vk.com/method/'
+r = "response"
+i = "items"
+token = ''
+items = []
+like = []
+mans = {}
+par_wall = {'wall.get': '', 'owner_id': str(user_id), 'count': count, 'filter': 'owner', 'extented': 0, 'access_token': token}
+
+#posti
+posts = requests.post('https://api.vk.com/method/wall.get',params=par_wall)
+posts_decoded = posts.json()
+logging.debug(posts.json())
+
+#id posts
+for n in posts_decoded[r][1:]:
+    items.append(n['id'])
+logging.debug(items)
+
+#likes
+for n in items:
+    time.sleep(2)
+    par_like = {'type': 'post', 'item_id': str(n), 'owner_id': str(user_id), 'filter': 'owner', 'extended': 0,
+                'access_token': token}
+    likes = requests.post('https://api.vk.com/method/likes.getList', params=par_like)
+    likes_decoded = likes.json()
+    logging.debug(likes_decoded)
+    for m in likes_decoded[r]["users"][0:]:
+        like.append(m)
+logging.debug(like)
+
+
+#users
+like_str = str(like[0])
+for n in like[1:]:
+    like_str = like_str +','+ str(n)
+
+par_users = {'user_ids': like_str, 'fields': 'verified,sex,friend_status,bdate',
+             'access_token': token}
+users = requests.post('https://api.vk.com/method/users.get', params=par_users)
+users_decoded = users.json()
+
+for n in users_decoded[r][0:]:
+    if n["sex"] == 2:
+        lyk = 0
+        for m in like:
+            if m == n["uid"]:
+                lyk = lyk + 1
+    name = n["last_name"] + ' ' + n["first_name"]
+    mans[name] = lyk
+
+mans_list = []
+for n in sorted(mans):
+    print(n, mans[n])
+
+
+
+print(())
